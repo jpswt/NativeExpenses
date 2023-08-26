@@ -5,6 +5,7 @@ import { GlobalStyles } from '../constants/style';
 import Button from '../components/Button';
 import { ExpensesContext } from '../store/ExpenseContext';
 import ExpenseForm from '../components/ExpenseForm';
+import { deleteExpense, storeExpense, updateExpense } from '../util/url';
 
 //route prop provided by react navigation
 const ManageExpense = ({ route, navigation }) => {
@@ -23,19 +24,22 @@ const ManageExpense = ({ route, navigation }) => {
 		});
 	}, [navigation, isEditing]);
 
-	function deleteHandler() {
+	async function deleteHandler() {
 		navigation.goBack();
 		expensesCtx.deleteExpense(editedExpenseId);
+		await deleteExpense(editedExpenseId);
 	}
 
 	function cancelHandler() {
 		navigation.goBack();
 	}
-	function confirmHandler(expenseData) {
-		{
-			isEditing
-				? expensesCtx.updateExpense(editedExpenseId, expenseData)
-				: expensesCtx.addExpense(expenseData);
+	async function confirmHandler(expenseData) {
+		if (isEditing) {
+			expensesCtx.updateExpense(editedExpenseId, expenseData);
+			await updateExpense(editedExpenseId, expenseData);
+		} else {
+			const id = await storeExpense(expenseData);
+			expensesCtx.addExpense({ ...expenseData, id: id });
 		}
 		navigation.goBack();
 	}
